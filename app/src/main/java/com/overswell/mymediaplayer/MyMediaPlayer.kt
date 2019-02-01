@@ -14,6 +14,9 @@ class MyMediaPlayer : Application() {
 
 val myModule = module {
     viewModel {
-        MainViewModel()
+        MainViewModel(get())
+    }
+    single {
+        ResourceArray(arrayOf(R.raw.kid))
     }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.annotation.RawRes
 import androidx.lifecycle.ViewModel
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
@@ -16,10 +17,10 @@ class MainActivity : AppCompatActivity() {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        vm.start(this)
+        vm.context = this
 
         button.setOnClickListener {
-            vm.play()
+            vm.play(R.raw.kid)
         }
         button2.setOnClickListener {
             vm.stop()
@@ -28,35 +29,39 @@ class MainActivity : AppCompatActivity() {
 
 }
 
-class MainViewModel : ViewModel() {
+class MainViewModel(val resourceArray: ResourceArray) : ViewModel() {
 
     lateinit var context: Context
     private var p: MediaPlayer? = null
-
-    fun start(context: Context) {
-        this.context = context
-        p = MediaPlayer.create(context, R.raw.kid)
-
+    private val map by lazy {
+        val map = HashMap<Int,MediaPlayer>()
+        resourceArray.resources.forEach {
+            map[it] = MediaPlayer.create(context, it)
+        }
+        map
     }
 
-    fun play() {
-        p?.let {
+    fun play(@RawRes resourceId: Int) {
+        map[resourceId]?.let {
             if (it.isPlaying) {
                 it.seekTo(0)
             }
             else {
                 it.start()
+                it.seekTo(0)
             }
         }
     }
 
     fun stop() {
-        p?.pause()
+        map
+            .filter { it.value.isPlaying }
+            .forEach { it.value.pause() }
     }
 
     override fun onCleared() {
         super.onCleared()
-        p?.release()
+        map.forEach { it.value.release() }
     }
 
 }
