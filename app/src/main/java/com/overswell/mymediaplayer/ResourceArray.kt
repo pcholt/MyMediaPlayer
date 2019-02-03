@@ -1,20 +1,13 @@
 package com.overswell.mymediaplayer
 
+import androidx.annotation.IdRes
+import androidx.annotation.RawRes
+
 data class ResourceArray(
-    val resources: Array<Int>
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+    val resources: Array<ResourceEntry>
+)
 
-        other as ResourceArray
-
-        if (!resources.contentEquals(other.resources)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        return resources.contentHashCode()
-    }
-}
+data class ResourceEntry(
+    @RawRes val audioResource: Int,
+    val labelButton: String
+)

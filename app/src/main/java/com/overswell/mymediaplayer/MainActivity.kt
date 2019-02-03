@@ -4,14 +4,19 @@ import android.content.Context
 import android.media.MediaPlayer
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
+import android.widget.TextView
 import androidx.annotation.RawRes
 import androidx.lifecycle.ViewModel
+import com.google.android.flexbox.FlexboxLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import java.util.zip.Inflater
 
 class MainActivity : AppCompatActivity() {
 
-    val vm: MainViewModel by viewModel()
+    private val vm: MainViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
@@ -19,12 +24,21 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         vm.context = this
 
-        button.setOnClickListener {
-            vm.play(R.raw.kid)
+        vm.resourceArray.resources.forEach { entry ->
+            (layoutInflater.inflate(R.layout.noise_button, null) as TextView)
+                .also {
+                    (flexbox_layout as FlexboxLayout).addView(it)
+                    it.text = entry.labelButton
+                }
+                .setOnClickListener {
+                    vm.play(entry.audioResource)
+                }
         }
-        button2.setOnClickListener {
+
+        stop.setOnClickListener {
             vm.stop()
         }
+
     }
 
 }
@@ -32,21 +46,20 @@ class MainActivity : AppCompatActivity() {
 class MainViewModel(val resourceArray: ResourceArray) : ViewModel() {
 
     lateinit var context: Context
-    private var p: MediaPlayer? = null
+
     private val map by lazy {
-        val map = HashMap<Int,MediaPlayer>()
-        resourceArray.resources.forEach {
-            map[it] = MediaPlayer.create(context, it)
+        HashMap<Int, MediaPlayer>().also { map ->
+            resourceArray.resources.forEach {
+                map[it.audioResource] = MediaPlayer.create(context, it.audioResource)
+            }
         }
-        map
     }
 
     fun play(@RawRes resourceId: Int) {
         map[resourceId]?.let {
             if (it.isPlaying) {
                 it.seekTo(0)
-            }
-            else {
+            } else {
                 it.start()
                 it.seekTo(0)
             }
@@ -61,7 +74,8 @@ class MainViewModel(val resourceArray: ResourceArray) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        map.forEach { it.value.release() }
+        map
+            .forEach { it.value.release() }
     }
 
 }
